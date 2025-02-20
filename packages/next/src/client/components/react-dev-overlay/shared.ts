@@ -2,8 +2,9 @@ import { useReducer } from 'react'
 
 import type { StackFrame } from 'next/dist/compiled/stacktrace-parser'
 import type { VersionInfo } from '../../../server/dev/parse-version-info'
-import type { SupportedErrorEvent } from './internal/container/Errors'
-import type { ComponentStackFrame } from './internal/helpers/parse-component-stack'
+import type { SupportedErrorEvent } from './_experimental/internal/container/runtime-error/render-error'
+import type { ComponentStackFrame } from './_experimental/internal/helpers/parse-component-stack'
+import type { DebugInfo } from './types'
 
 type FastRefreshState =
   /** No refresh in progress. */
@@ -19,8 +20,12 @@ export interface OverlayState {
   rootLayoutMissingTags: typeof window.__next_root_layout_missing_tags
   versionInfo: VersionInfo
   notFound: boolean
+  staticIndicator: boolean
+  disableDevIndicator: boolean
+  debugInfo: DebugInfo
 }
 
+export const ACTION_STATIC_INDICATOR = 'static-indicator'
 export const ACTION_BUILD_OK = 'build-ok'
 export const ACTION_BUILD_ERROR = 'build-error'
 export const ACTION_BEFORE_REFRESH = 'before-fast-refresh'
@@ -28,6 +33,12 @@ export const ACTION_REFRESH = 'fast-refresh'
 export const ACTION_VERSION_INFO = 'version-info'
 export const ACTION_UNHANDLED_ERROR = 'unhandled-error'
 export const ACTION_UNHANDLED_REJECTION = 'unhandled-rejection'
+export const ACTION_DEBUG_INFO = 'debug-info'
+
+interface StaticIndicatorAction {
+  type: typeof ACTION_STATIC_INDICATOR
+  staticIndicator: boolean
+}
 
 interface BuildOkAction {
   type: typeof ACTION_BUILD_OK
@@ -56,6 +67,11 @@ export interface UnhandledRejectionAction {
   frames: StackFrame[]
 }
 
+export interface DebugInfoAction {
+  type: typeof ACTION_DEBUG_INFO
+  debugInfo: any
+}
+
 interface VersionInfoAction {
   type: typeof ACTION_VERSION_INFO
   versionInfo: VersionInfo
@@ -69,6 +85,8 @@ export type BusEvent =
   | UnhandledErrorAction
   | UnhandledRejectionAction
   | VersionInfoAction
+  | StaticIndicatorAction
+  | DebugInfoAction
 
 function pushErrorFilterDuplicates(
   errors: SupportedErrorEvent[],
@@ -77,7 +95,7 @@ function pushErrorFilterDuplicates(
   return [
     ...errors.filter((e) => {
       // Filter out duplicate errors
-      return e.event.reason !== err.event.reason
+      return e.event.reason.stack !== err.event.reason.stack
     }),
     err,
   ]
@@ -88,14 +106,23 @@ export const INITIAL_OVERLAY_STATE: OverlayState = {
   buildError: null,
   errors: [],
   notFound: false,
+  staticIndicator: false,
+  disableDevIndicator: process.env.__NEXT_DEV_INDICATOR?.toString() === 'false',
   refreshState: { type: 'idle' },
   rootLayoutMissingTags: [],
   versionInfo: { installed: '0.0.0', staleness: 'unknown' },
+  debugInfo: { devtoolsFrontendUrl: undefined },
 }
 
 export function useErrorOverlayReducer() {
   return useReducer((_state: OverlayState, action: BusEvent): OverlayState => {
     switch (action.type) {
+      case ACTION_DEBUG_INFO: {
+        return { ..._state, debugInfo: action.debugInfo }
+      }
+      case ACTION_STATIC_INDICATOR: {
+        return { ..._state, staticIndicator: action.staticIndicator }
+      }
       case ACTION_BUILD_OK: {
         return { ..._state, buildError: null }
       }

@@ -4,8 +4,9 @@ import type { Duplex } from 'stream'
 import type { webpack } from 'next/dist/compiled/webpack/webpack'
 import type getBaseWebpackConfig from '../../build/webpack-config'
 import type { RouteDefinition } from '../route-definitions/route-definition'
-import type { Project, Update as TurbopackUpdate } from '../../build/swc'
+import type { Project, Update as TurbopackUpdate } from '../../build/swc/types'
 import type { VersionInfo } from './parse-version-info'
+import type { DebugInfo } from '../../client/components/react-dev-overlay/types'
 
 export const enum HMR_ACTIONS_SENT_TO_BROWSER {
   ADDED_PAGE = 'addedPage',
@@ -53,6 +54,7 @@ export interface SyncAction {
   warnings: ReadonlyArray<CompilationError>
   versionInfo: VersionInfo
   updatedModules?: ReadonlyArray<string>
+  debug?: DebugInfo
 }
 interface BuiltAction {
   action: HMR_ACTIONS_SENT_TO_BROWSER.BUILT
@@ -74,10 +76,12 @@ interface RemovedPageAction {
 
 export interface ReloadPageAction {
   action: HMR_ACTIONS_SENT_TO_BROWSER.RELOAD_PAGE
+  data: string
 }
 
 interface ServerComponentChangesAction {
   action: HMR_ACTIONS_SENT_TO_BROWSER.SERVER_COMPONENT_CHANGES
+  hash: string
 }
 
 interface MiddlewareChangesAction {
@@ -104,11 +108,12 @@ interface DevPagesManifestUpdateAction {
 
 export interface TurbopackConnectedAction {
   action: HMR_ACTIONS_SENT_TO_BROWSER.TURBOPACK_CONNECTED
+  data: { sessionId: number }
 }
 
 export interface AppIsrManifestAction {
   action: HMR_ACTIONS_SENT_TO_BROWSER.APP_ISR_MANIFEST
-  data: Record<string, false | number>
+  data: Record<string, boolean>
 }
 
 export type HMR_ACTION_TYPES =
@@ -130,7 +135,10 @@ export type HMR_ACTION_TYPES =
 
 export type TurbopackMsgToBrowser =
   | { type: HMR_ACTIONS_SENT_TO_BROWSER.TURBOPACK_MESSAGE; data: any }
-  | { type: HMR_ACTIONS_SENT_TO_BROWSER.TURBOPACK_CONNECTED }
+  | {
+      type: HMR_ACTIONS_SENT_TO_BROWSER.TURBOPACK_CONNECTED
+      data: { sessionId: number }
+    }
 
 export interface NextJsHotReloaderInterface {
   turbopackProject?: Project
@@ -146,7 +154,6 @@ export interface NextJsHotReloaderInterface {
   setHmrServerError(error: Error | null): void
   clearHmrServerError(): void
   start(): Promise<void>
-  stop(): Promise<void>
   send(action: HMR_ACTION_TYPES): void
   getCompilationErrors(page: string): Promise<any[]>
   onHMR(
@@ -176,4 +183,5 @@ export interface NextJsHotReloaderInterface {
     definition: RouteDefinition | undefined
     url?: string
   }): Promise<void>
+  close(): void
 }

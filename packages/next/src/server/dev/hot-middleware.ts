@@ -72,16 +72,11 @@ class EventStream {
     this.clients = new Set()
   }
 
-  everyClient(fn: (client: ws) => void) {
-    for (const client of this.clients) {
-      fn(client)
-    }
-  }
-
   close() {
-    this.everyClient((client) => {
-      client.close()
-    })
+    for (const wsClient of this.clients) {
+      // it's okay to not cleanly close these websocket connections, this is dev
+      wsClient.terminate()
+    }
     this.clients.clear()
   }
 
@@ -93,9 +88,9 @@ class EventStream {
   }
 
   publish(payload: any) {
-    this.everyClient((client) => {
-      client.send(JSON.stringify(payload))
-    })
+    for (const wsClient of this.clients) {
+      wsClient.send(JSON.stringify(payload))
+    }
   }
 }
 
@@ -106,14 +101,20 @@ export class WebpackHotMiddleware {
   serverLatestStats: { ts: number; stats: webpack.Stats } | null
   closed: boolean
   versionInfo: VersionInfo
+  devtoolsFrontendUrl: string | undefined
 
-  constructor(compilers: webpack.Compiler[], versionInfo: VersionInfo) {
+  constructor(
+    compilers: webpack.Compiler[],
+    versionInfo: VersionInfo,
+    devtoolsFrontendUrl: string | undefined
+  ) {
     this.eventStream = new EventStream()
     this.clientLatestStats = null
     this.middlewareLatestStats = null
     this.serverLatestStats = null
     this.closed = false
     this.versionInfo = versionInfo
+    this.devtoolsFrontendUrl = devtoolsFrontendUrl
 
     compilers[0].hooks.invalid.tap(
       'webpack-hot-middleware',
@@ -210,6 +211,9 @@ export class WebpackHotMiddleware {
           ...(middlewareStats.warnings || []),
         ],
         versionInfo: this.versionInfo,
+        debug: {
+          devtoolsFrontendUrl: this.devtoolsFrontendUrl,
+        },
       })
     }
   }

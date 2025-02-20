@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ReactRefreshLogBox app default Import trace when module not found in layout 1`] = `
-"./app/module.js:1:1
+"./app/module.js (1:1)
 Module not found: Can't resolve 'non-existing-module'
 > 1 | import "non-existing-module"
     | ^
@@ -43,7 +43,7 @@ exports[`ReactRefreshLogBox app default conversion to class component (1) 1`] = 
 `;
 
 exports[`ReactRefreshLogBox app default css syntax errors 1`] = `
-"./index.module.css:1:1
+"./index.module.css (1:1)
 Syntax error: Selector "button" is not pure (pure selectors must contain at least one local class or id)
 
 > 1 | button {}
@@ -76,6 +76,27 @@ exports[`ReactRefreshLogBox app default module init error not shown 1`] = `
   6 |     return <h1>Default Export</h1>;"
 `;
 
+exports[`ReactRefreshLogBox app default should hide unrelated frames in stack trace with nodejs internal calls 1`] = `
+"app/page.js (2:3) @ Page
+
+  1 | export default function Page() {
+> 2 |   new URL("/", "invalid");
+    |   ^
+  3 | }"
+`;
+
+exports[`ReactRefreshLogBox app default should hide unrelated frames in stack trace with unknown anonymous calls 1`] = `
+"app/page.js (4:13) @ eval
+
+  2 |   try {
+  3 |     (function() {
+> 4 |       throw new Error("This is an error from an anonymous function");
+    |             ^
+  5 |     })();
+  6 |   } catch (e) {
+  7 |     throw e"
+`;
+
 exports[`ReactRefreshLogBox app default should strip whitespace correctly with newline 1`] = `
 "index.js (7:15) @ onClick
 
@@ -89,7 +110,7 @@ exports[`ReactRefreshLogBox app default should strip whitespace correctly with n
 `;
 
 exports[`ReactRefreshLogBox app turbo Import trace when module not found in layout 1`] = `
-"./app/module.js:1:1
+"./app/module.js (1:1)
 Module not found: Can't resolve 'non-existing-module'
 > 1 | import "non-existing-module"
     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -98,7 +119,8 @@ https://nextjs.org/docs/messages/module-not-found"
 `;
 
 exports[`ReactRefreshLogBox app turbo Should not show __webpack_exports__ when exporting anonymous arrow function 1`] = `
-"index.js (3:11) @ {default export}
+"index.js (3:11) @
+{default export}
 
   1 | export default () => {
   2 |   if (typeof window !== 'undefined') {
@@ -148,7 +170,7 @@ exports[`ReactRefreshLogBox app turbo logbox: anchors links in error messages 6`
 exports[`ReactRefreshLogBox app turbo logbox: anchors links in error messages 7`] = `"https://nextjs.org/"`;
 
 exports[`ReactRefreshLogBox app turbo module init error not shown 1`] = `
-"index.js (3:7) @ <unknown>
+"index.js (3:7) @ [project]/index.js [app-client] (ecmascript)
 
   1 | // top offset for snapshot
   2 | import * as React from 'react';
@@ -157,6 +179,27 @@ exports[`ReactRefreshLogBox app turbo module init error not shown 1`] = `
   4 | class ClassDefault extends React.Component {
   5 |   render() {
   6 |     return <h1>Default Export</h1>;"
+`;
+
+exports[`ReactRefreshLogBox app turbo should hide unrelated frames in stack trace with nodejs internal calls 1`] = `
+"app/page.js (2:3) @ Page
+
+  1 | export default function Page() {
+> 2 |   new URL("/", "invalid");
+    |   ^
+  3 | }"
+`;
+
+exports[`ReactRefreshLogBox app turbo should hide unrelated frames in stack trace with unknown anonymous calls 1`] = `
+"app/page.js (4:13) @ <anonymous>
+
+  2 |   try {
+  3 |     (function() {
+> 4 |       throw new Error("This is an error from an anonymous function");
+    |             ^
+  5 |     })();
+  6 |   } catch (e) {
+  7 |     throw e"
 `;
 
 exports[`ReactRefreshLogBox app turbo should strip whitespace correctly with newline 1`] = `
