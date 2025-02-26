@@ -1,4 +1,4 @@
-import { sandbox } from 'development-sandbox'
+import { createSandbox } from 'development-sandbox'
 import { FileRef, nextTestSetup } from 'e2e-utils'
 import { describeVariants as describe } from 'next-test-utils'
 import { outdent } from 'outdent'
@@ -13,10 +13,11 @@ describe.each(['default', 'turbo'])(
     })
 
     test('empty _app shows logbox', async () => {
-      const { session, cleanup } = await sandbox(
+      await using sandbox = await createSandbox(
         next,
         new Map([['pages/_app.js', ``]])
       )
+      const { session } = sandbox
       await session.assertHasRedbox()
       expect(await session.getRedboxDescription()).toMatchInlineSnapshot(
         `"Error: The default export is not a React Component in page: "/_app""`
@@ -32,14 +33,14 @@ describe.each(['default', 'turbo'])(
       `
       )
       await session.assertNoRedbox()
-      await cleanup()
     })
 
     test('empty _document shows logbox', async () => {
-      const { session, cleanup } = await sandbox(
+      await using sandbox = await createSandbox(
         next,
         new Map([['pages/_document.js', ``]])
       )
+      const { session } = sandbox
       await session.assertHasRedbox()
       expect(await session.getRedboxDescription()).toMatchInlineSnapshot(
         `"Error: The default export is not a React Component in page: "/_document""`
@@ -73,11 +74,10 @@ describe.each(['default', 'turbo'])(
       `
       )
       await session.assertNoRedbox()
-      await cleanup()
     })
 
     test('_app syntax error shows logbox', async () => {
-      const { session, cleanup } = await sandbox(
+      await using sandbox = await createSandbox(
         next,
         new Map([
           [
@@ -91,20 +91,21 @@ describe.each(['default', 'turbo'])(
           ],
         ])
       )
+      const { session } = sandbox
       await session.assertHasRedbox()
       const content = await session.getRedboxSource()
       const source = next.normalizeTestDirContent(content)
       if (process.env.TURBOPACK) {
         expect(source).toMatchInlineSnapshot(`
-          "./pages/_app.js:2:11
-          Parsing ecmascript source code failed
-            1 | function MyApp({ Component, pageProps }) {
-          > 2 |   return <<Component {...pageProps} />;
-              |           ^
-            3 | }
-            4 | export default MyApp
+         "./pages/_app.js (2:11)
+         Parsing ecmascript source code failed
+           1 | function MyApp({ Component, pageProps }) {
+         > 2 |   return <<Component {...pageProps} />;
+             |           ^
+           3 | }
+           4 | export default MyApp
 
-          Expression expected"
+         Expression expected"
         `)
       } else {
         expect(source).toMatchInlineSnapshot(`
@@ -141,11 +142,10 @@ describe.each(['default', 'turbo'])(
       `
       )
       await session.assertNoRedbox()
-      await cleanup()
     })
 
     test('_document syntax error shows logbox', async () => {
-      const { session, cleanup } = await sandbox(
+      await using sandbox = await createSandbox(
         next,
         new Map([
           [
@@ -177,23 +177,24 @@ describe.each(['default', 'turbo'])(
           ],
         ])
       )
+      const { session } = sandbox
       await session.assertHasRedbox()
       const source = next.normalizeTestDirContent(
         await session.getRedboxSource()
       )
       if (process.env.TURBOPACK) {
         expect(source).toMatchInlineSnapshot(`
-          "./pages/_document.js:3:36
-          Parsing ecmascript source code failed
-            1 | import Document, { Html, Head, Main, NextScript } from 'next/document'
-            2 |
-          > 3 | class MyDocument extends Document {{
-              |                                    ^
-            4 |   static async getInitialProps(ctx) {
-            5 |     const initialProps = await Document.getInitialProps(ctx)
-            6 |     return { ...initialProps }
+         "./pages/_document.js (3:36)
+         Parsing ecmascript source code failed
+           1 | import Document, { Html, Head, Main, NextScript } from 'next/document'
+           2 |
+         > 3 | class MyDocument extends Document {{
+             |                                    ^
+           4 |   static async getInitialProps(ctx) {
+           5 |     const initialProps = await Document.getInitialProps(ctx)
+           6 |     return { ...initialProps }
 
-          Unexpected token \`{\`. Expected identifier, string literal, numeric literal or [ for the computed key"
+         Unexpected token \`{\`. Expected identifier, string literal, numeric literal or [ for the computed key"
         `)
       } else {
         expect(source).toMatchInlineSnapshot(`
@@ -242,7 +243,6 @@ describe.each(['default', 'turbo'])(
       `
       )
       await session.assertNoRedbox()
-      await cleanup()
     })
   }
 )
